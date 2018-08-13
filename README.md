@@ -1,56 +1,69 @@
 # **Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
+[//]: # (Image References)
 
-Overview
----
-
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
-
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
+[image1]: ./test_output_images/input.jpg "Sample Input Image"
+[image2]: ./test_output_images/output.jpg "Sample Output Image"
+[image3]: ./test_output_images/grayscale.jpg "Output of grayscale conversion"
+[image4]: ./test_output_images/blur.jpg "Output of Gaussian blur"
+[image5]: ./test_output_images/edge.jpg "Output of Canny Edge Detection"
+[image6]: ./test_output_images/ROI.jpg "Output of ROI"
+[image7]: ./test_output_images/lines.jpg "Output of Hough Line Detection"
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
-
-1. Describe the pipeline
-
-2. Identify any shortcomings
-
-3. Suggest possible improvements
-
-We encourage using images in your writeup to demonstrate how your pipeline works.  
-
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
 
 
-The Project
----
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7) if you haven't already.
+### Description
 
-**Step 2:** Open the code in a Jupyter Notebook
+The goal of this project is to use input images of a lane marked road to detect the lanes and highlight the detected lanes in the output image. We first develop a process pipeline to run on single images. We further develop to deploy the same pipeline on video input.
+![alt text][image1]
+![alt text][image2]
 
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out [Udacity's free course on Anaconda and Jupyter Notebooks](https://classroom.udacity.com/courses/ud1111) to get started.
 
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
+The project is implemented as a part of [Udacity Self Driving Car Nanodegree coursework](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013)
 
-`> jupyter notebook`
 
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
 
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
+### Process pipeline
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+Here we describe the processing pipeline on the single image:
+1. We first convert the input image which is RGB i.e. color to grayscale as that is a more apporpriate colorspace for further processing.
+![alt text][image3]
 
+
+
+2. Second step is to use Gaussain blur on the image to smooth the image so that only prominent edges are left in the image. This is useful preprocesing for edge detection.
+![alt text][image4]
+
+3. Third, we find the edge in the grayscale image using the Canny operation. We use the OpenCV Canny operation. With certain experimemntation we found 50 and 150 to be suitable lower and upper threshold values for the dataset.
+![alt text][image5]
+
+4. Fourth, we generate a region of interest(ROI) mask for the image. This is the area where we expect the lanes that we are intersted to be in. The values of the polygon ROI are again found by experimentation. For the input image size of 540x980 the vertices are [(0, 540),(440, 320), (520, 320), (900, 540)] where (0,0) is the top left of the image.
+![alt text][image6]
+
+5. Finally, we detect the lines in the ROI using Hough transform. We again use the OpenCV implementation and the parameters for Hough transform are found using experimentation. We use value 1 for rho, theta and threshold. Min. line length to be found is 5 pixels and max. line gap is 5.
+
+ Within this step we work on smoothing the various line segments returned by Hough transform to show single conjoined line as left and right lane. To do this we look at every line segment returned by Hough transform and decide if it is a part of left lane or right based on its slope value i.e. > or < 0. The we calculate the average slope and average x-y coordinates for each lane. While doing this we restrict only the line segments where the slope was between certain values. This helped filter out some outliers. One we have the average slope and coordinates we calculate the intersection with the y-coordinates of the ROI at the top and bottom of the image for both the lanes. We use this cooridnates to draw the lines.
+
+![alt text][image7]
+
+The final output is shown by highligthing the detected lanes on the original image.
+![alt text][image2]
+
+
+
+
+### Shortcomings:
+Following shortconings can be noticed with this approach:
+1. The values for parameters at various stages, i.e. Gaussian blur, edge detection, line detection, slope determination for identifying left and right lane lines are hardcoded to this dataset and will not work for different images based upon lighting, curvature, resolution, camera position etc.
+
+2. The point of view of the images is front view which makes the lanes vanish at the horizon and the lanes are not always parallel.
+
+3. Some frames while running on video did not detect either left or right lane. This issue might be worse in some cases. 
+
+### Possible improvements:
+1.  Slopes within successive frames do not change value drasctically. The calculated slope values can be made smooth by using the knowledge of previously calculated slopes.
+
+2. We can use better learning methods for parameters. One of them could be to use input data sets from different sources.

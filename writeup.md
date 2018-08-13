@@ -5,7 +5,7 @@
 [image1]: ./test_output_images/input.jpg "Sample Input Image"
 [image2]: ./test_output_images/output.jpg "Sample Output Image"
 [image3]: ./test_output_images/grayscale.jpg "Output of grayscale conversion"
-[image4]: test_output_images/blur.jpg "Output of Gaussian blur"
+[image4]: ./test_output_images/blur.jpg "Output of Gaussian blur"
 [image5]: ./test_output_images/edge.jpg "Output of Canny Edge Detection"
 [image6]: ./test_output_images/ROI.jpg "Output of ROI"
 [image7]: ./test_output_images/lines.jpg "Output of Hough Line Detection"
