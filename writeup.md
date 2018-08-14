@@ -40,7 +40,7 @@ Grayscale conversion:
 
 
 
-2. Second step is to use Gaussian blur on the image to smooth the image so that only prominent edges are left in the image. This is useful preprocessing for edge detection.
+2. Second step is to use Gaussian blur on the image to smooth the image so that only prominent edges are left in the image. This is useful preprocessing for edge detection. We use a kernel size of 3.
 
 Gaussian blur
 ![alt text][image4]
@@ -55,10 +55,11 @@ Edge image:
 ROI:
 ![alt text][image6]
 
-5. Finally, we detect the lines in the ROI using Hough transform. We again use the OpenCV implementation and the parameters for Hough transform are found using experimentation. We use value 1 for rho, theta and threshold. Min. line length to be found is 5 pixels and max. line gap is 5.
+5. Finally, we detect the lines in the ROI using Hough transform. We again use the OpenCV implementation and the parameters for Hough transform are found using experimentation. We use values rho = theta = 1, threshold = 20,  min. line length = 5, and max. line gap = 5.
 
  Within this step we work on smoothing the various line segments returned by Hough transform to show single conjoined line as left and right lane. To do this we look at every line segment returned by Hough transform and decide if it is a part of left lane or right based on its slope value i.e. > or < 0. The we calculate the average slope and average x-y coordinates for each lane. While doing this we restrict only the line segments where the slope was between certain values. This helped filter out some outliers. One we have the average slope and coordinates we calculate the intersection with the y-coordinates of the ROI at the top and bottom of the image for both the lanes. We use this cooridnates to draw the lines.
-
+ Other apporaches tried included: median of all slopes, mean of all slopes, used 2 and 1 standard deviation of all slope values. 
+ 
 Line representing lanes:
 ![alt text][image7]
 
@@ -72,13 +73,17 @@ Final lane output overlaid on input image:
 
 ### Shortcomings:
 Following shortcomings can be noticed with this approach:
-1. The values for parameters at various stages, i.e. Gaussian blur, edge detection, line detection, slope determination for identifying left and right lane lines are hard-coded to this dataset and will not work for different images based upon lighting, curvature, resolution, camera position etc.
+1. The values for parameters at various stages, i.e. Gaussian blur, edge detection, line detection, slope determination for identifying left and right lane lines are hard-coded to this dataset and will not work for different images as lighting, curvature, resolution, camera position etc. changes
 
 2. The point of view of the images is front view which makes the lanes vanish at the horizon and the lanes are not always parallel.
 
-3. Some frames while running on video did not detect either left or right lane. This issue might be worse in some cases. 
+3. It is ineffecient to try all possible combinations of changing parameters and come up with a best set with this approach.
+
+
 
 ### Possible improvements:
 1.  Slopes within successive frames do not change value drastically. The calculated slope values can be made smooth by using the knowledge of previously calculated slopes. 
 
 2. We can use better learning methods for parameters. One of them could be to use input data sets from different sources.
+
+3. There could be some fixed metric for truth and programmatically trying all parameters to get a good set of values. 
